@@ -3018,8 +3018,8 @@ def execute_java_code(code: str) -> tuple[bool, str]:
     
     # Nuove credenziali JDoodle valide
     payload = {
-        "clientId": "380e59bd4866a400e5feac21e43ee232",
-        "clientSecret": "12c32ecafe29b0d3fdec21fb6a72d98eb0e6ba5a3ddd27b7f69c9b8d1e5f3a2c",
+        "clientId": "df0e21ed40f4a2d3316bdef051f65159",
+        "clientSecret": "5754e40c5ec91d5424f1b595be53a347b764c8fc1fbd7ace5ff2f014af7de802",
         "script": modified_code,
         "language": "java"
     }
