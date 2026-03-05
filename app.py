@@ -2993,14 +2993,14 @@ def show_multiple_choice(module_id: int):
 
 def execute_java_code(code: str) -> tuple[bool, str]:
     """
-    Esegue codice Java usando TutorialsPoint API (online)
+    Esegue codice Java usando JDoodle API - Più affidabile di Judge0
     Ritorna (successo, output/errore)
     """
     import requests
-    import json
+    import time
     
-    # API TutorialsPoint - Gratuito e affidabile
-    url = "https://api.tutorialspoint.com/api/v1/execution/execute"
+    # JDoodle API - Più affidabile, 200 req/giorno (vs Judge0 50)
+    url = "https://api.jdoodle.com/v1/execute"
     
     # Assicurati che la classe sia "Main"
     modified_code = code
@@ -3012,34 +3012,61 @@ def execute_java_code(code: str) -> tuple[bool, str]:
             if old_name != "Main":
                 modified_code = code.replace(f"public class {old_name}", "public class Main")
     
+    headers = {
+        "content-type": "application/json"
+    }
+    
+    # Credenziali JDoodle (API key pubblica - gratuita)
     payload = {
-        "language": "java",
-        "code": modified_code,
-        "stdin": ""
+        "clientId": "d5bf1c65c12088047e90d0d3e66499ad",
+        "clientSecret": "d5aa18b9b77fe6a51055b89a85e3a60f54d1b4ba287d01c43fbe6da893e7f11e",
+        "script": modified_code,
+        "language": "java"
     }
     
     try:
-        response = requests.post(url, json=payload, timeout=15)
+        # Prova con retry (fino a 3 tentativi)
+        for attempt in range(3):
+            try:
+                response = requests.post(url, json=payload, headers=headers, timeout=20)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    
+                    # Controlla se c'è un output
+                    if result.get("output"):
+                        output = result.get("output").strip()
+                        return True, output if output else "(Nessun output)"
+                    elif result.get("error"):
+                        error = result.get("error")
+                        return False, f"Errore:\n{error}"
+                    else:
+                        return True, "(Nessun output)"
+                
+                elif response.status_code == 429:
+                    # Rate limited - riprova
+                    if attempt < 2:
+                        time.sleep(2)
+                        continue
+                    return False, "API limitata. Riprova tra pochi secondi."
+                else:
+                    # Altro errore - riprova
+                    if attempt < 2:
+                        time.sleep(1)
+                        continue
+                    return False, f"Errore API: Status {response.status_code}"
+                    
+            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+                # Errore di connessione - riprova
+                if attempt < 2:
+                    time.sleep(1)
+                    continue
+                return False, "Errore di connessione dopo 3 tentativi. Controlla la tua connessione."
         
-        if response.status_code == 200:
-            result = response.json()
+        return False, "Impossibile eseguire il codice dopo 3 tentativi"
             
-            # Controlla se c'è un output
-            if result.get("output"):
-                return True, result.get("output", "")
-            elif result.get("error"):
-                return False, result.get("error", "Errore sconosciuto")
-            else:
-                return True, "(Nessun output)"
-        else:
-            return False, f"Errore API: Status {response.status_code}"
-            
-    except requests.exceptions.Timeout:
-        return False, "Timeout: Il codice ha impiegato troppo tempo"
-    except requests.exceptions.ConnectionError:
-        return False, "Errore di connessione. Controlla la tua connessione internet."
     except Exception as e:
-        return False, f"Errore: {str(e)}\n\nAssicurati che il codice sia sintatticamente corretto!"
+        return False, f"Errore: {str(e)}"
 
 
 def show_coding_challenge(module_id: int, level: int = 1):
