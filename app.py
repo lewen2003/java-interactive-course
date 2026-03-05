@@ -2993,66 +2993,53 @@ def show_multiple_choice(module_id: int):
 
 def execute_java_code(code: str) -> tuple[bool, str]:
     """
-    Esegue codice Java usando compilazione e esecuzione locale
+    Esegue codice Java usando TutorialsPoint API (online)
     Ritorna (successo, output/errore)
     """
-    import subprocess
-    import tempfile
-    import os
+    import requests
+    import json
+    
+    # API TutorialsPoint - Gratuito e affidabile
+    url = "https://api.tutorialspoint.com/api/v1/execution/execute"
+    
+    # Assicurati che la classe sia "Main"
+    modified_code = code
+    if "public class" in code:
+        import re
+        class_match = re.search(r'public\s+class\s+(\w+)', code)
+        if class_match:
+            old_name = class_match.group(1)
+            if old_name != "Main":
+                modified_code = code.replace(f"public class {old_name}", "public class Main")
+    
+    payload = {
+        "language": "java",
+        "code": modified_code,
+        "stdin": ""
+    }
     
     try:
-        # Crea una cartella temporanea
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # Salva il file Java
-            java_file = os.path.join(temp_dir, "Main.java")
+        response = requests.post(url, json=payload, timeout=15)
+        
+        if response.status_code == 200:
+            result = response.json()
             
-            # Sostituisci il nome della classe con "Main" se necessario
-            modified_code = code
-            if "public class" in code:
-                # Estrai il nome della classe
-                import re
-                class_match = re.search(r'public\s+class\s+(\w+)', code)
-                if class_match:
-                    old_name = class_match.group(1)
-                    if old_name != "Main":
-                        modified_code = code.replace(f"public class {old_name}", "public class Main")
+            # Controlla se c'è un output
+            if result.get("output"):
+                return True, result.get("output", "")
+            elif result.get("error"):
+                return False, result.get("error", "Errore sconosciuto")
+            else:
+                return True, "(Nessun output)"
+        else:
+            return False, f"Errore API: Status {response.status_code}"
             
-            with open(java_file, "w") as f:
-                f.write(modified_code)
-            
-            # Compila
-            compile_result = subprocess.run(
-                ["javac", java_file],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                cwd=temp_dir
-            )
-            
-            if compile_result.returncode != 0:
-                return False, f"Errore di Compilazione:\n{compile_result.stderr}"
-            
-            # Esegui
-            run_result = subprocess.run(
-                ["java", "-cp", temp_dir, "Main"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                cwd=temp_dir
-            )
-            
-            if run_result.returncode != 0:
-                return False, f"Errore di Esecuzione:\n{run_result.stderr}"
-            
-            output = run_result.stdout if run_result.stdout else "(Nessun output)"
-            return True, output
-            
-    except subprocess.TimeoutExpired:
-        return False, "Timeout: Il codice ha impiegato troppo tempo (loop infinito?)"
-    except FileNotFoundError:
-        return False, "Java non è installato sul sistema. Assicurati che javac e java siano disponibili."
+    except requests.exceptions.Timeout:
+        return False, "Timeout: Il codice ha impiegato troppo tempo"
+    except requests.exceptions.ConnectionError:
+        return False, "Errore di connessione. Controlla la tua connessione internet."
     except Exception as e:
-        return False, f"Errore: {str(e)}"
+        return False, f"Errore: {str(e)}\n\nAssicurati che il codice sia sintatticamente corretto!"
 
 
 def show_coding_challenge(module_id: int, level: int = 1):
@@ -3091,7 +3078,7 @@ def show_coding_challenge(module_id: int, level: int = 1):
     
     with col_output:
         st.markdown("### 📤 Output del Programma")
-        output_placeholder = st.empty()
+        output_container = st.container()
     
     # Bottoni sotto l'editor
     st.markdown("---")
@@ -3106,10 +3093,38 @@ def show_coding_challenge(module_id: int, level: int = 1):
                         
                         if success:
                             st.success("✅ Esecuzione Completata!")
-                            st.code(output, language="")
+                            # Styling per l'output di successo
+                            st.markdown(f"""
+                            <div style="
+                                background-color: #ffffff;
+                                color: #000000;
+                                padding: 15px;
+                                border-radius: 8px;
+                                border: 2px solid #10b981;
+                                font-family: 'Courier New', monospace;
+                                font-size: 14px;
+                                white-space: pre-wrap;
+                                word-wrap: break-word;
+                                line-height: 1.5;
+                            ">{output}</div>
+                            """, unsafe_allow_html=True)
                         else:
                             st.error("❌ Errore nell'Esecuzione")
-                            st.code(output, language="")
+                            # Styling per l'output di errore
+                            st.markdown(f"""
+                            <div style="
+                                background-color: #fff5f5;
+                                color: #c53030;
+                                padding: 15px;
+                                border-radius: 8px;
+                                border: 2px solid #fc8181;
+                                font-family: 'Courier New', monospace;
+                                font-size: 14px;
+                                white-space: pre-wrap;
+                                word-wrap: break-word;
+                                line-height: 1.5;
+                            ">{output}</div>
+                            """, unsafe_allow_html=True)
             else:
                 st.warning("⚠️ Scrivi del codice prima di eseguirlo!")
     
