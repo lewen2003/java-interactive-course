@@ -2861,10 +2861,10 @@ def show_multiple_choice(module_id: int):
     response = st.radio(
         q["q"],
         q["options"],
-        key=f"mc_q{module_id}_{random.random()}"
+        key=f"mc_q_{module_id}"
     )
     
-    if st.button("Verifica Risposta", key=f"mc_btn_{module_id}_{random.random()}"):
+    if st.button("Verifica Risposta", key=f"mc_btn_{module_id}"):
         if q["options"].index(response) == q["correct"]:
             st.markdown(f"""
             <div class="success-box">
@@ -2899,13 +2899,20 @@ def show_coding_challenge(module_id: int, level: int = 1):
     with st.expander("📋 Template Codice"):
         st.code(challenge["template"], language="java")
     
+    # Salva il codice nello session_state per evitare che si perda
+    code_key = f"code_{module_id}_{level}"
+    if code_key not in st.session_state:
+        st.session_state[code_key] = ""
+    
     code_input = st.text_area(
         "Scrivi il tuo codice qui:",
         height=250,
-        key=f"code_{module_id}_{level}_{random.random()}"
+        value=st.session_state[code_key],
+        key=code_key,
+        on_change=lambda: st.session_state.update({code_key: st.session_state[code_key]})
     )
     
-    if st.button("Verifica Soluzione", key=f"code_btn_{module_id}_{level}_{random.random()}"):
+    if st.button("Verifica Soluzione", key=f"code_btn_{module_id}_{level}"):
         checks_passed = sum(1 for check in challenge['solution_check'] if check.lower() in code_input.lower())
         
         if checks_passed >= len(challenge['solution_check']) * 0.7:
@@ -2949,9 +2956,9 @@ def show_true_false(module_id: int):
         with col1:
             st.write(f"**{idx + 1}. {stmt['statement']}**")
         with col2:
-            answers[idx] = st.radio("", ["Vero", "Falso"], key=f"tf_{module_id}_{idx}_{random.random()}", horizontal=True)
+            answers[idx] = st.radio("", ["Vero", "Falso"], key=f"tf_{module_id}_{idx}", horizontal=True)
     
-    if st.button("Verifica Risposte", key=f"tf_btn_{module_id}_{random.random()}"):
+    if st.button("Verifica Risposte", key=f"tf_btn_{module_id}"):
         score = 0
         for idx, stmt in enumerate(exercises):
             user_answer = answers[idx] == "Vero"
