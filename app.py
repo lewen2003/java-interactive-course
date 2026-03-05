@@ -2993,39 +2993,70 @@ def show_multiple_choice(module_id: int):
 
 def execute_java_code(code: str) -> tuple[bool, str]:
     """
-    Esegue codice Java usando JDoodle API
+    Esegue codice Java usando compilazione e esecuzione locale
     Ritorna (successo, output/errore)
     """
-    import requests
-    import json
-    
-    # API JDoodle (gratuito, non richiede API key per pochi tentativi)
-    url = "https://api.jdoodle.com/v1/execute"
-    
-    payload = {
-        "clientId": "d5bf1c65c12088047e90d0d3e66499ad",
-        "clientSecret": "d5aa18b9b77fe6a51055b89a85e3a60f54d1b4ba287d01c43fbe6da893e7f11e",
-        "script": code,
-        "language": "java",
-        "versionIndex": "0"
-    }
+    import subprocess
+    import tempfile
+    import os
     
     try:
-        response = requests.post(url, json=payload, timeout=10)
-        result = response.json()
-        
-        if result.get("statusCode") == 200:
-            output = result.get("output", "")
-            return True, output if output else "(Nessun output)"
-        else:
-            error = result.get("error", "Errore sconosciuto")
-            return False, error
+        # Crea una cartella temporanea
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Salva il file Java
+            java_file = os.path.join(temp_dir, "Main.java")
+            
+            # Sostituisci il nome della classe con "Main" se necessario
+            modified_code = code
+            if "public class" in code:
+                # Estrai il nome della classe
+                import re
+                class_match = re.search(r'public\s+class\s+(\w+)', code)
+                if class_match:
+                    old_name = class_match.group(1)
+                    if old_name != "Main":
+                        modified_code = code.replace(f"public class {old_name}", "public class Main")
+            
+            with open(java_file, "w") as f:
+                f.write(modified_code)
+            
+            # Compila
+            compile_result = subprocess.run(
+                ["javac", java_file],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                cwd=temp_dir
+            )
+            
+            if compile_result.returncode != 0:
+                return False, f"Errore di Compilazione:\n{compile_result.stderr}"
+            
+            # Esegui
+            run_result = subprocess.run(
+                ["java", "-cp", temp_dir, "Main"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                cwd=temp_dir
+            )
+            
+            if run_result.returncode != 0:
+                return False, f"Errore di Esecuzione:\n{run_result.stderr}"
+            
+            output = run_result.stdout if run_result.stdout else "(Nessun output)"
+            return True, output
+            
+    except subprocess.TimeoutExpired:
+        return False, "Timeout: Il codice ha impiegato troppo tempo (loop infinito?)"
+    except FileNotFoundError:
+        return False, "Java non è installato sul sistema. Assicurati che javac e java siano disponibili."
     except Exception as e:
-        return False, f"Errore di connessione: {str(e)}\n\nAssicurati che il codice sia sintatticamente corretto!"
+        return False, f"Errore: {str(e)}"
 
 
 def show_coding_challenge(module_id: int, level: int = 1):
-    """Mostra coding challenge"""
+    """Mostra coding challenge con editor e output in due colonne"""
     st.markdown(f"### 💻 Coding Challenge - Livello {level}")
     
     exercises = EXERCISES_DATA.get(module_id, {}).get("coding_challenges", [])
@@ -3040,48 +3071,50 @@ def show_coding_challenge(module_id: int, level: int = 1):
     with st.expander("📋 Template Codice"):
         st.code(challenge["template"], language="java")
     
-    # Salva il codice nello session_state per evitare che si perda
+    # Salva il codice nello session_state
     code_key = f"code_{module_id}_{level}"
     if code_key not in st.session_state:
         st.session_state[code_key] = ""
     
-    code_input = st.text_area(
-        "Scrivi il tuo codice qui:",
-        height=250,
-        value=st.session_state[code_key],
-        key=code_key,
-        on_change=lambda: st.session_state.update({code_key: st.session_state[code_key]})
-    )
+    # Dividi in due colonne: Editor e Output
+    col_editor, col_output = st.columns([1, 1], gap="medium")
     
-    # Bottone per eseguire il codice
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("▶️ Esegui Codice", key=f"run_btn_{module_id}_{level}"):
+    with col_editor:
+        st.markdown("### 📝 Editor di Codice")
+        code_input = st.text_area(
+            "Scrivi il tuo codice Java:",
+            height=350,
+            value=st.session_state[code_key],
+            key=code_key,
+            on_change=lambda: st.session_state.update({code_key: st.session_state[code_key]})
+        )
+    
+    with col_output:
+        st.markdown("### 📤 Output del Programma")
+        output_placeholder = st.empty()
+    
+    # Bottoni sotto l'editor
+    st.markdown("---")
+    col_run, col_verify = st.columns(2, gap="medium")
+    
+    with col_run:
+        if st.button("▶️ Esegui Codice", use_container_width=True, key=f"run_btn_{module_id}_{level}"):
             if code_input.strip():
-                st.info("⏳ Esecuzione del codice in corso...")
-                success, output = execute_java_code(code_input)
-                
-                if success:
-                    st.markdown("""
-                    <div class="success-box">
-                    <strong>✅ Codice Eseguito Correttamente!</strong>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    st.markdown("### 📤 Output del Programma:")
-                    st.code(output, language="")
-                else:
-                    st.markdown("""
-                    <div class="error-box">
-                    <strong>❌ Errore nell'Esecuzione</strong>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    st.markdown("### 📤 Errore:")
-                    st.code(output, language="")
+                with col_output:
+                    with st.spinner("⏳ Esecuzione del codice in corso..."):
+                        success, output = execute_java_code(code_input)
+                        
+                        if success:
+                            st.success("✅ Esecuzione Completata!")
+                            st.code(output, language="")
+                        else:
+                            st.error("❌ Errore nell'Esecuzione")
+                            st.code(output, language="")
             else:
                 st.warning("⚠️ Scrivi del codice prima di eseguirlo!")
     
-    with col2:
-        if st.button("✔️ Verifica Soluzione", key=f"code_btn_{module_id}_{level}"):
+    with col_verify:
+        if st.button("✔️ Verifica Soluzione", use_container_width=True, key=f"code_btn_{module_id}_{level}"):
             if not code_input.strip():
                 st.warning("⚠️ Scrivi del codice prima di verificare!")
             else:
@@ -3095,7 +3128,7 @@ def show_coding_challenge(module_id: int, level: int = 1):
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    # Mostra soluzione di esempio SOLO DOPO il feedback
+                    # Mostra soluzione di esempio
                     st.markdown("### 📚 Esempio di Soluzione Corretta:")
                     st.code(challenge["solution_example"], language="java")
                     
@@ -3117,7 +3150,6 @@ def show_coding_challenge(module_id: int, level: int = 1):
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    # Mostra soluzione di esempio anche se sbagliato - SOLO DOPO il feedback
                     st.markdown("### 📚 Esempio di Soluzione Corretta:")
                     st.code(challenge["solution_example"], language="java")
                     
