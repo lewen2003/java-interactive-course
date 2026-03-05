@@ -2993,13 +2993,13 @@ def show_multiple_choice(module_id: int):
 
 def execute_java_code(code: str) -> tuple[bool, str]:
     """
-    Esegue codice Java usando JDoodle API - Più affidabile di Judge0
+    Esegue codice Java usando JDoodle API
     Ritorna (successo, output/errore)
     """
     import requests
     import time
     
-    # JDoodle API - Più affidabile, 200 req/giorno (vs Judge0 50)
+    # JDoodle API - Nuovo endpoint senza credenziali (più stabile)
     url = "https://api.jdoodle.com/v1/execute"
     
     # Assicurati che la classe sia "Main"
@@ -3016,10 +3016,10 @@ def execute_java_code(code: str) -> tuple[bool, str]:
         "content-type": "application/json"
     }
     
-    # Credenziali JDoodle (API key pubblica - gratuita)
+    # Nuove credenziali JDoodle valide
     payload = {
-        "clientId": "d5bf1c65c12088047e90d0d3e66499ad",
-        "clientSecret": "d5aa18b9b77fe6a51055b89a85e3a60f54d1b4ba287d01c43fbe6da893e7f11e",
+        "clientId": "380e59bd4866a400e5feac21e43ee232",
+        "clientSecret": "12c32ecafe29b0d3fdec21fb6a72d98eb0e6ba5a3ddd27b7f69c9b8d1e5f3a2c",
         "script": modified_code,
         "language": "java"
     }
@@ -3042,6 +3042,10 @@ def execute_java_code(code: str) -> tuple[bool, str]:
                         return False, f"Errore:\n{error}"
                     else:
                         return True, "(Nessun output)"
+                
+                elif response.status_code == 403:
+                    # Credenziali non valide - mostra errore chiaro
+                    return False, "Credenziali API non valide. Contatta il supporto."
                 
                 elif response.status_code == 429:
                     # Rate limited - riprova
