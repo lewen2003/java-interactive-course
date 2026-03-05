@@ -2991,6 +2991,39 @@ def show_multiple_choice(module_id: int):
             """, unsafe_allow_html=True)
             return False
 
+def execute_java_code(code: str) -> tuple[bool, str]:
+    """
+    Esegue codice Java usando JDoodle API
+    Ritorna (successo, output/errore)
+    """
+    import requests
+    import json
+    
+    # API JDoodle (gratuito, non richiede API key per pochi tentativi)
+    url = "https://api.jdoodle.com/v1/execute"
+    
+    payload = {
+        "clientId": "d5bf1c65c12088047e90d0d3e66499ad",
+        "clientSecret": "d5aa18b9b77fe6a51055b89a85e3a60f54d1b4ba287d01c43fbe6da893e7f11e",
+        "script": code,
+        "language": "java",
+        "versionIndex": "0"
+    }
+    
+    try:
+        response = requests.post(url, json=payload, timeout=10)
+        result = response.json()
+        
+        if result.get("statusCode") == 200:
+            output = result.get("output", "")
+            return True, output if output else "(Nessun output)"
+        else:
+            error = result.get("error", "Errore sconosciuto")
+            return False, error
+    except Exception as e:
+        return False, f"Errore di connessione: {str(e)}\n\nAssicurati che il codice sia sintatticamente corretto!"
+
+
 def show_coding_challenge(module_id: int, level: int = 1):
     """Mostra coding challenge"""
     st.markdown(f"### 💻 Coding Challenge - Livello {level}")
@@ -3020,44 +3053,75 @@ def show_coding_challenge(module_id: int, level: int = 1):
         on_change=lambda: st.session_state.update({code_key: st.session_state[code_key]})
     )
     
-    if st.button("Verifica Soluzione", key=f"code_btn_{module_id}_{level}"):
-        checks_passed = sum(1 for check in challenge['solution_check'] if check.lower() in code_input.lower())
-        
-        if checks_passed >= len(challenge['solution_check']) * 0.7:
-            st.markdown(f"""
-            <div class="success-box">
-            <strong>✅ Soluzione Accettata!</strong><br>
-            {challenge['explanation']}<br><br>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Mostra soluzione di esempio SOLO DOPO il feedback
-            st.markdown("### 📚 Esempio di Soluzione Corretta:")
-            st.code(challenge["solution_example"], language="java")
-            
-            if level < len(exercises):
-                st.markdown("---")
-                if st.button(f"→ Prossimo Livello Coding (Livello {level + 1})", key=f"next_{module_id}_{level}"):
-                    st.session_state.course_state["current_exercise_level"] = level + 1
-                    st.rerun()
+    # Bottone per eseguire il codice
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("▶️ Esegui Codice", key=f"run_btn_{module_id}_{level}"):
+            if code_input.strip():
+                st.info("⏳ Esecuzione del codice in corso...")
+                success, output = execute_java_code(code_input)
+                
+                if success:
+                    st.markdown("""
+                    <div class="success-box">
+                    <strong>✅ Codice Eseguito Correttamente!</strong>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.markdown("### 📤 Output del Programma:")
+                    st.code(output, language="")
+                else:
+                    st.markdown("""
+                    <div class="error-box">
+                    <strong>❌ Errore nell'Esecuzione</strong>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.markdown("### 📤 Errore:")
+                    st.code(output, language="")
             else:
-                st.success("🎉 Hai completato tutti gli esercizi di coding per questo modulo!")
-            
-            return True
-        else:
-            st.markdown(f"""
-            <div class="error-box">
-            <strong>⚠️ Soluzione Incompleta</strong><br>
-            Hai implementato {checks_passed}/{len(challenge['solution_check'])} elementi richiesti.<br>
-            Suggerimento: Assicurati di includere tutti gli elementi: {', '.join(challenge['solution_check'])}
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Mostra soluzione di esempio anche se sbagliato - SOLO DOPO il feedback
-            st.markdown("### 📚 Esempio di Soluzione Corretta:")
-            st.code(challenge["solution_example"], language="java")
-            
-            return False
+                st.warning("⚠️ Scrivi del codice prima di eseguirlo!")
+    
+    with col2:
+        if st.button("✔️ Verifica Soluzione", key=f"code_btn_{module_id}_{level}"):
+            if not code_input.strip():
+                st.warning("⚠️ Scrivi del codice prima di verificare!")
+            else:
+                checks_passed = sum(1 for check in challenge['solution_check'] if check.lower() in code_input.lower())
+                
+                if checks_passed >= len(challenge['solution_check']) * 0.7:
+                    st.markdown(f"""
+                    <div class="success-box">
+                    <strong>✅ Soluzione Accettata!</strong><br>
+                    {challenge['explanation']}<br><br>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Mostra soluzione di esempio SOLO DOPO il feedback
+                    st.markdown("### 📚 Esempio di Soluzione Corretta:")
+                    st.code(challenge["solution_example"], language="java")
+                    
+                    if level < len(exercises):
+                        st.markdown("---")
+                        if st.button(f"→ Prossimo Livello Coding (Livello {level + 1})", key=f"next_{module_id}_{level}"):
+                            st.session_state.course_state["current_exercise_level"] = level + 1
+                            st.rerun()
+                    else:
+                        st.success("🎉 Hai completato tutti gli esercizi di coding per questo modulo!")
+                    
+                    return True
+                else:
+                    st.markdown(f"""
+                    <div class="error-box">
+                    <strong>⚠️ Soluzione Incompleta</strong><br>
+                    Hai implementato {checks_passed}/{len(challenge['solution_check'])} elementi richiesti.<br>
+                    Suggerimento: Assicurati di includere tutti gli elementi: {', '.join(challenge['solution_check'])}
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Mostra soluzione di esempio anche se sbagliato - SOLO DOPO il feedback
+                    st.markdown("### 📚 Esempio di Soluzione Corretta:")
+                    st.code(challenge["solution_example"], language="java")
+                    
+                    return False
 
 def show_true_false(module_id: int):
     """Mostra esercizio vero/falso"""
