@@ -2035,6 +2035,16 @@ EXERCISES_DATA = {
                 "template": """public class TypeDeclaration {
     public static void main(String[] args) {
         // Dichiara int myInt, double myDouble, boolean myBool
+        
+        
+        // Stampa le tre variabili
+        
+        
+    }
+}""",
+                "solution_example": """public class TypeDeclaration {
+    public static void main(String[] args) {
+        // Dichiara int myInt, double myDouble, boolean myBool
         int myInt = 42;
         double myDouble = 3.14159;
         boolean myBool = true;
@@ -2052,6 +2062,13 @@ EXERCISES_DATA = {
                 "level": 2,
                 "description": "Calcola il resto della divisione di 17 per 5 usando l'operatore modulo e stampa il risultato.",
                 "template": """public class ModuloChallenge {
+    public static void main(String[] args) {
+        // Usa l'operatore % per calcolare 17 % 5
+        
+        
+    }
+}""",
+                "solution_example": """public class ModuloChallenge {
     public static void main(String[] args) {
         // Usa l'operatore % per calcolare 17 % 5
         int a = 17;
@@ -2109,6 +2126,13 @@ EXERCISES_DATA = {
                 "template": """public class ForLoop {
     public static void main(String[] args) {
         // Scrivi un ciclo for da 1 a 5
+        
+        
+    }
+}""",
+                "solution_example": """public class ForLoop {
+    public static void main(String[] args) {
+        // Scrivi un ciclo for da 1 a 5
         for (int i = 1; i <= 5; i++) {
             System.out.println(i);
         }
@@ -2121,6 +2145,13 @@ EXERCISES_DATA = {
                 "level": 2,
                 "description": "Scrivi un ciclo while che stampi i numeri da 10 a 1 in ordine decrescente.",
                 "template": """public class WhileLoop {
+    public static void main(String[] args) {
+        // Scrivi un ciclo while da 10 a 1
+        
+        
+    }
+}""",
+                "solution_example": """public class WhileLoop {
     public static void main(String[] args) {
         // Scrivi un ciclo while da 10 a 1
         int i = 10;
@@ -2174,6 +2205,17 @@ EXERCISES_DATA = {
                 "template": """public class ArrayBasics {
     public static void main(String[] args) {
         // Dichiara e inizializza un array di 5 interi
+        
+        
+        // Stampa il primo elemento (indice 0)
+        
+        // Stampa l'ultimo elemento (indice 4)
+        
+    }
+}""",
+                "solution_example": """public class ArrayBasics {
+    public static void main(String[] args) {
+        // Dichiara e inizializza un array di 5 interi
         int[] array = {1, 2, 3, 4, 5};
         
         // Stampa il primo elemento (indice 0)
@@ -2190,6 +2232,17 @@ EXERCISES_DATA = {
                 "level": 2,
                 "description": "Scrivi un programma che crea una stringa, la converte in maiuscole, e stampa la lunghezza.",
                 "template": """public class StringManipulation {
+    public static void main(String[] args) {
+        // Dichiara una stringa
+        
+        
+        // Converti in maiuscole
+        
+        // Stampa la lunghezza
+        
+    }
+}""",
+                "solution_example": """public class StringManipulation {
     public static void main(String[] args) {
         // Dichiara una stringa
         String str = "Java Programming";
@@ -2244,6 +2297,17 @@ EXERCISES_DATA = {
                 "level": 1,
                 "description": "Crea una classe Person con attributi name e age, un costruttore, e un metodo toString().",
                 "template": """public class Person {
+    // Attributi
+    
+    
+    // Costruttore
+    
+    
+    // Metodo toString
+    
+    
+}""",
+                "solution_example": """public class Person {
     private String name;
     private int age;
     
@@ -2259,11 +2323,6 @@ EXERCISES_DATA = {
                 ", age=" + age +
                 '}';
     }
-    
-    public static void main(String[] args) {
-        Person p = new Person("Alice", 25);
-        System.out.println(p.toString());
-    }
 }""",
                 "solution_check": ["String name", "int age", "public Person", "toString"],
                 "explanation": "Bene! Hai creato una classe OOP corretta."
@@ -2272,6 +2331,17 @@ EXERCISES_DATA = {
                 "level": 2,
                 "description": "Crea una classe Account con attributi privati, getter/setter, e un metodo deposit().",
                 "template": """public class Account {
+    // Attributi privati
+    
+    
+    // Getter e setter
+    
+    
+    // Metodo deposit
+    
+    
+}""",
+                "solution_example": """public class Account {
     private double balance;
     
     public Account(double initialBalance) {
@@ -2293,12 +2363,6 @@ EXERCISES_DATA = {
             balance += amount;
             System.out.println("Depositato: €" + amount);
         }
-    }
-    
-    public static void main(String[] args) {
-        Account acc = new Account(1000);
-        acc.deposit(500);
-        System.out.println("Saldo: " + acc.getBalance());
     }
 }""",
                 "solution_check": ["private", "double balance", "getBalance", "setBalance", "deposit"],
@@ -2967,9 +3031,9 @@ def show_coding_challenge(module_id: int, level: int = 1):
             </div>
             """, unsafe_allow_html=True)
             
-            # Mostra soluzione di esempio
+            # Mostra soluzione di esempio SOLO DOPO il feedback
             st.markdown("### 📚 Esempio di Soluzione Corretta:")
-            st.code(challenge["template"], language="java")
+            st.code(challenge["solution_example"], language="java")
             
             if level < len(exercises):
                 st.markdown("---")
@@ -2989,9 +3053,9 @@ def show_coding_challenge(module_id: int, level: int = 1):
             </div>
             """, unsafe_allow_html=True)
             
-            # Mostra soluzione di esempio anche se sbagliato
+            # Mostra soluzione di esempio anche se sbagliato - SOLO DOPO il feedback
             st.markdown("### 📚 Esempio di Soluzione Corretta:")
-            st.code(challenge["template"], language="java")
+            st.code(challenge["solution_example"], language="java")
             
             return False
 
