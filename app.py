@@ -2035,9 +2035,14 @@ EXERCISES_DATA = {
                 "template": """public class TypeDeclaration {
     public static void main(String[] args) {
         // Dichiara int myInt, double myDouble, boolean myBool
+        int myInt = 42;
+        double myDouble = 3.14159;
+        boolean myBool = true;
         
         // Stampa le tre variabili
-        
+        System.out.println("Int: " + myInt);
+        System.out.println("Double: " + myDouble);
+        System.out.println("Boolean: " + myBool);
     }
 }""",
                 "solution_check": ["int", "double", "boolean", "println"],
@@ -2049,8 +2054,10 @@ EXERCISES_DATA = {
                 "template": """public class ModuloChallenge {
     public static void main(String[] args) {
         // Usa l'operatore % per calcolare 17 % 5
-        
-        
+        int a = 17;
+        int b = 5;
+        int risultato = a % b;
+        System.out.println("17 % 5 = " + risultato);
     }
 }""",
                 "solution_check": ["%", "println", "17"],
@@ -2102,8 +2109,9 @@ EXERCISES_DATA = {
                 "template": """public class ForLoop {
     public static void main(String[] args) {
         // Scrivi un ciclo for da 1 a 5
-        
-        
+        for (int i = 1; i <= 5; i++) {
+            System.out.println(i);
+        }
     }
 }""",
                 "solution_check": ["for", "println", "i < 5", "i++"],
@@ -2115,8 +2123,11 @@ EXERCISES_DATA = {
                 "template": """public class WhileLoop {
     public static void main(String[] args) {
         // Scrivi un ciclo while da 10 a 1
-        
-        
+        int i = 10;
+        while (i >= 1) {
+            System.out.println(i);
+            i--;
+        }
     }
 }""",
                 "solution_check": ["while", "println", "i--", "10"],
@@ -2163,12 +2174,13 @@ EXERCISES_DATA = {
                 "template": """public class ArrayBasics {
     public static void main(String[] args) {
         // Dichiara e inizializza un array di 5 interi
-        
+        int[] array = {1, 2, 3, 4, 5};
         
         // Stampa il primo elemento (indice 0)
+        System.out.println("Primo: " + array[0]);
         
         // Stampa l'ultimo elemento (indice 4)
-        
+        System.out.println("Ultimo: " + array[4]);
     }
 }""",
                 "solution_check": ["int[]", "new int[5]", "array[0]", "array[4]"],
@@ -2180,12 +2192,14 @@ EXERCISES_DATA = {
                 "template": """public class StringManipulation {
     public static void main(String[] args) {
         // Dichiara una stringa
-        
+        String str = "Java Programming";
         
         // Converti in maiuscole
+        String maiuscola = str.toUpperCase();
         
         // Stampa la lunghezza
-        
+        System.out.println("Stringa: " + maiuscola);
+        System.out.println("Lunghezza: " + maiuscola.length());
     }
 }""",
                 "solution_check": ["String", "toUpperCase()", "length()", "println"],
@@ -2230,15 +2244,26 @@ EXERCISES_DATA = {
                 "level": 1,
                 "description": "Crea una classe Person con attributi name e age, un costruttore, e un metodo toString().",
                 "template": """public class Person {
-    // Attributi
+    private String name;
+    private int age;
     
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
     
-    // Costruttore
+    @Override
+    public String toString() {
+        return "Person{" +
+                "name='" + name + '\\'' +
+                ", age=" + age +
+                '}';
+    }
     
-    
-    // Metodo toString
-    
-    
+    public static void main(String[] args) {
+        Person p = new Person("Alice", 25);
+        System.out.println(p.toString());
+    }
 }""",
                 "solution_check": ["String name", "int age", "public Person", "toString"],
                 "explanation": "Bene! Hai creato una classe OOP corretta."
@@ -2247,15 +2272,34 @@ EXERCISES_DATA = {
                 "level": 2,
                 "description": "Crea una classe Account con attributi privati, getter/setter, e un metodo deposit().",
                 "template": """public class Account {
-    // Attributi privati
+    private double balance;
     
+    public Account(double initialBalance) {
+        this.balance = initialBalance;
+    }
     
-    // Getter e setter
+    public double getBalance() {
+        return balance;
+    }
     
+    public void setBalance(double balance) {
+        if (balance >= 0) {
+            this.balance = balance;
+        }
+    }
     
-    // Metodo deposit
+    public void deposit(double amount) {
+        if (amount > 0) {
+            balance += amount;
+            System.out.println("Depositato: €" + amount);
+        }
+    }
     
-    
+    public static void main(String[] args) {
+        Account acc = new Account(1000);
+        acc.deposit(500);
+        System.out.println("Saldo: " + acc.getBalance());
+    }
 }""",
                 "solution_check": ["private", "double balance", "getBalance", "setBalance", "deposit"],
                 "explanation": "Perfetto! Hai applicato l'incapsulamento."
@@ -2923,7 +2967,12 @@ def show_coding_challenge(module_id: int, level: int = 1):
             </div>
             """, unsafe_allow_html=True)
             
+            # Mostra soluzione di esempio
+            st.markdown("### 📚 Esempio di Soluzione Corretta:")
+            st.code(challenge["template"], language="java")
+            
             if level < len(exercises):
+                st.markdown("---")
                 if st.button(f"→ Prossimo Livello Coding (Livello {level + 1})", key=f"next_{module_id}_{level}"):
                     st.session_state.course_state["current_exercise_level"] = level + 1
                     st.rerun()
@@ -2939,6 +2988,11 @@ def show_coding_challenge(module_id: int, level: int = 1):
             Suggerimento: Assicurati di includere tutti gli elementi: {', '.join(challenge['solution_check'])}
             </div>
             """, unsafe_allow_html=True)
+            
+            # Mostra soluzione di esempio anche se sbagliato
+            st.markdown("### 📚 Esempio di Soluzione Corretta:")
+            st.code(challenge["template"], language="java")
+            
             return False
 
 def show_true_false(module_id: int):
