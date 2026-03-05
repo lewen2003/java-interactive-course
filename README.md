@@ -49,7 +49,7 @@ Un'applicazione web interattiva per imparare Java SE dai concetti intermedi agli
 git clone https://github.com/tuonome/java-interactive-course.git
 cd java-interactive-course
 
-# 2. Crea un virtual environment (opzionale ma consigliato)
+# 2. Crea un virtual environment
 python -m venv venv
 source venv/bin/activate  # su Windows: venv\Scripts\activate
 
@@ -62,7 +62,7 @@ streamlit run app.py
 
 L'app si aprirà automaticamente su `http://localhost:8501`
 
-### Opzione 2: Deploy su Streamlit Cloud (Consigliato)
+### Opzione 2: Deploy su Streamlit Cloud 
 
 #### Prerequisiti
 - Account GitHub
@@ -181,22 +181,7 @@ I contributi sono benvenuti! Se vuoi aiutare a migliorare il corso:
 4. Push al branch (`git push origin feature/nuova-lezione`)
 5. Apri una Pull Request
 
-## 📝 Licenza
 
-Questo progetto è distribuito sotto la licenza MIT. Vedi il file [LICENSE](LICENSE) per dettagli.
-
-## 👨‍💻 Autore
-
-Creato come risorsa educativa per insegnare Java in modo interattivo e coinvolgente.
-
-## 📞 Supporto
-
-Per domande o suggerimenti:
-- 📧 Email: tuaemail@example.com
-- 💬 GitHub Issues: https://github.com/tuonome/java-interactive-course/issues
-- 🐦 Twitter: @tuohandle
-
----
 
 **Versione:** 1.0.0  
 **Ultimo aggiornamento:** Marzo 2024  
